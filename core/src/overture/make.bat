@@ -47,7 +47,6 @@ IF NOT EXIST %ANDROID_X86_CC% (
     python.exe %ANDROID_NDK_HOME%\build\tools\make_standalone_toolchain.py --arch x86 ^
         --api %MIN_API% --install-dir %ANDROID_X86_TOOLCHAIN%
 )
-
 REM Check environment availability
 IF NOT EXIST %CC% (
     ECHO "gcc not found"
@@ -98,7 +97,7 @@ IF %BUILD% == 1 (
 	    SET GOARM=7
 	    go.exe build -ldflags="-s -w"
 	    %ANDROID_ARM_STRIP% main
-	    MOVE main %TARGET%\armeabi-v7a\liboverture.so>nul 2>nul 
+	    MOVE main %TARGET%\armeabi-v7a\liboverture.so>nul 2>nul 		
 	    ENDLOCAL
 	)
 
