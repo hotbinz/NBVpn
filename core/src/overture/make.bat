@@ -29,7 +29,7 @@ MKDIR %TARGET%\x86>nul 2>nul
 MKDIR %TARGET%\arm64-v8a>nul 2>nul 
 
 SET CC=%ANDROID_ARM_TOOLCHAIN%\bin\arm-linux-androideabi-gcc.exe
-
+set http_proxy=http://127.0.0.1:1080
 IF NOT EXIST %ANDROID_ARM_CC% (
 	ECHO "Make standalone toolchain for ARM arch"
     python.exe %ANDROID_NDK_HOME%\build\tools\make_standalone_toolchain.py --arch arm ^
@@ -130,5 +130,5 @@ IF %BUILD% == 1 (
 	POPD
 )
 
-ECHO "Successfully build overture"
+ECHO "Successfully build overture target:%TARGET%"
 ENDLOCAL
