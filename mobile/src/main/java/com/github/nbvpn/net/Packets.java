@@ -28,23 +28,17 @@ public class Packets {
         }
     }
 
+    public IpPacket getParsedPacket() {
+        return parsedPacket;
+    }
+
     public InetAddress getInetAddress() {
         InetAddress destAddr = translateDestinationAdress(parsedPacket);
         return destAddr;
     }
 
-    public String getTCP() {
-        String filter = "ip and tcp and (dst host 127.0.0.1 and dst port 80)";
-        TcpPacket tcpPacket = null;
-        if (!(parsedPacket.getPayload() instanceof TcpPacket)) {
-            try {
-                tcpPacket = TcpPacket.newPacket(parsedPacket.getPayload().getRawData(),0,parsedPacket.getPayload().getRawData().length);
-            } catch (IllegalRawDataException e) {
-                e.printStackTrace();
-            }
-            Log.e(TAG, "VpnTrafficMonitorThread: getTCP " + tcpPacket.toString());
-        }
-        return "";
+    public Boolean getTCP() {
+        return (parsedPacket.getPayload() instanceof TcpPacket);
     }
 
     public String getRequestHostName() {

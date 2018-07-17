@@ -82,7 +82,7 @@ object BaseService {
 
         var timer: Timer? = null
         var trafficMonitorThread: TrafficMonitorThread? = null
-        var urlMonitorThread: UrlMonitorThread? = null
+        var loggerThread: UrlMonitorThread? = null
 
         val callbacks = RemoteCallbackList<IShadowsocksServiceCallback>()
 
@@ -269,6 +269,7 @@ object BaseService {
                     "-b", "127.0.0.1",
                     "-l", DataStore.portProxy.toString(),
                     "-t", "600",
+                    "-v", "1",
                     "-c", data.buildShadowsocksConfig().absolutePath))
 
             val acl = data.aclFile
@@ -323,6 +324,9 @@ object BaseService {
             data.trafficMonitorThread?.stopThread()
             data.trafficMonitorThread = null
 
+            data.loggerThread?.stopThread()
+            data.loggerThread = null
+
             // change the state
             data.changeState(STOPPED, msg)
 
@@ -346,11 +350,15 @@ object BaseService {
             }
             profile.name = profile.formattedName    // save name for later queries
             data.profile = profile
-
+            //流量统计
             TrafficMonitor.reset()
             val thread = TrafficMonitorThread()
             thread.start()
             data.trafficMonitorThread = thread
+            //访问日志
+            val loggerThread = UrlMonitorThread()
+            loggerThread.start()
+            data.loggerThread = loggerThread
 
             if (!data.closeReceiverRegistered) {
                 // register close receiver

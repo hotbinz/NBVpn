@@ -230,8 +230,8 @@ class VpnService : BaseVpnService(), LocalDnsService.Interface {
         val fd = conn.fd
 
         //获取VPN流量
-        val vpnTrafficMonitorThread = VpnTrafficMonitorThread(conn)
-        vpnTrafficMonitorThread.start()
+//        val vpnTrafficMonitorThread = VpnTrafficMonitorThread(conn)
+//        vpnTrafficMonitorThread.start()
         //获取VPN流量-----END
 
         if (BuildCompat.isAtLeastP()) {
