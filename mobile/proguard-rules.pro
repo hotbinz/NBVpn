@@ -28,3 +28,5 @@
 -dontwarn org.xbill.**
 -dontwarn com.evernote.android.job.gcm.**
 -dontwarn com.evernote.android.job.util.GcmAvailableHelper
+-dontwarn com.tencent.bugly.**
+-keep public class com.tencent.bugly.**{*;}

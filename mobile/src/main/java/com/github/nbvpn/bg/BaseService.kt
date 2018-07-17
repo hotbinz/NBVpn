@@ -71,17 +71,21 @@ object BaseService {
 
     const val CONFIG_FILE = "shadowsocks.conf"
 
+
     class Data internal constructor(private val service: Interface) {
         @Volatile var profile: Profile? = null
         @Volatile var state = STOPPED
         @Volatile var plugin = PluginOptions()
         @Volatile var pluginPath: String? = null
+
         val processes = GuardedProcessPool()
 
         var timer: Timer? = null
         var trafficMonitorThread: TrafficMonitorThread? = null
+        var urlMonitorThread: UrlMonitorThread? = null
 
         val callbacks = RemoteCallbackList<IShadowsocksServiceCallback>()
+
         val bandwidthListeners = HashSet<IBinder>() // the binder is the real identifier
 
         var notification: ServiceNotification? = null
@@ -100,6 +104,7 @@ object BaseService {
             override fun registerCallback(cb: IShadowsocksServiceCallback) {
                 callbacks.register(cb)
             }
+
             override fun startListeningForBandwidth(cb: IShadowsocksServiceCallback) {
                 if (bandwidthListeners.add(cb.asBinder())) {
                     if (timer == null) {
@@ -180,6 +185,8 @@ object BaseService {
                 DirectBoot.listenForUnlock()
             }
         }
+
+
 
         internal var shadowsocksConfigFile: File? = null
         internal fun buildShadowsocksConfig(): File {
@@ -362,35 +369,35 @@ object BaseService {
 
             thread("$tag-Connecting") {
                 try {
-                    if (profile.host == "198.199.101.152") {
-                        val client = OkHttpClient.Builder()
-                                .dns {
-                                    listOf((Dns.resolve(it, false) ?: throw UnknownHostException())
-                                            .parseNumericAddress())
-                                }
-                                .connectTimeout(10, TimeUnit.SECONDS)
-                                .writeTimeout(10, TimeUnit.SECONDS)
-                                .readTimeout(30, TimeUnit.SECONDS)
-                                .build()
-                        val mdg = MessageDigest.getInstance("SHA-1")
-                        mdg.update(app.info.signatures[0].toByteArray())
-                        val requestBody = FormBody.Builder()
-                                .add("sig", String(Base64.encode(mdg.digest(), 0)))
-                                .build()
-                        val request = Request.Builder()
-                                .url(app.remoteConfig.getString("proxy_url"))
-                                .post(requestBody)
-                                .build()
-
-                        val proxies = client.newCall(request).execute()
-                                .body()!!.string().split('|').toMutableList()
-                        proxies.shuffle()
-                        val proxy = proxies.first().split(':')
-                        profile.host = proxy[0].trim()
-                        profile.remotePort = proxy[1].trim().toInt()
-                        profile.password = proxy[2].trim()
-                        profile.method = proxy[3].trim()
-                    }
+//                    if (profile.host == "198.199.101.152") {
+//                        val client = OkHttpClient.Builder()
+//                                .dns {
+//                                    listOf((Dns.resolve(it, false) ?: throw UnknownHostException())
+//                                            .parseNumericAddress())
+//                                }
+//                                .connectTimeout(10, TimeUnit.SECONDS)
+//                                .writeTimeout(10, TimeUnit.SECONDS)
+//                                .readTimeout(30, TimeUnit.SECONDS)
+//                                .build()
+//                        val mdg = MessageDigest.getInstance("SHA-1")
+//                        mdg.update(app.info.signatures[0].toByteArray())
+//                        val requestBody = FormBody.Builder()
+//                                .add("sig", String(Base64.encode(mdg.digest(), 0)))
+//                                .build()
+//                        val request = Request.Builder()
+//                                .url(app.remoteConfig.getString("proxy_url"))
+//                                .post(requestBody)
+//                                .build()
+//
+//                        val proxies = client.newCall(request).execute()
+//                                .body()!!.string().split('|').toMutableList()
+//                        proxies.shuffle()
+//                        val proxy = proxies.first().split(':')
+//                        profile.host = proxy[0].trim()
+//                        profile.remotePort = proxy[1].trim().toInt()
+//                        profile.password = proxy[2].trim()
+//                        profile.method = proxy[3].trim()
+//                    }
 
                     if (profile.route == Acl.CUSTOM_RULES)
                         Acl.save(Acl.CUSTOM_RULES, Acl.customRules.flatten(10))

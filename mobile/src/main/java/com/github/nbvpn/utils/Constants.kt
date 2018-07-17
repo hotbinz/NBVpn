@@ -53,6 +53,7 @@ object Key {
     const val host = "proxy"
     const val password = "sitekey"
     const val method = "encMethod"
+    const val proxyType = "proxyType"
     const val remotePort = "remotePortNum"
     const val remoteDns = "remoteDns"
 
@@ -69,6 +70,7 @@ object Action {
     const val SERVICE = "com.github.nbvpn.SERVICE"
     const val CLOSE = "com.github.nbvpn.CLOSE"
     const val RELOAD = "com.github.nbvpn.RELOAD"
+    const val STATIS_RECORD = "com.github.nbvpn.STATIS_RECORD"
 
     const val EXTRA_PROFILE_ID = "com.github.nbvpn.EXTRA_PROFILE_ID"
 }

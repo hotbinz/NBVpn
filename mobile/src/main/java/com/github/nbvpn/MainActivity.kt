@@ -23,9 +23,7 @@ package com.github.nbvpn
 import android.app.Activity
 import android.app.PendingIntent
 import android.app.backup.BackupManager
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.net.Uri
 import android.net.VpnService
 import android.nfc.NdefMessage
@@ -54,9 +52,7 @@ import com.github.nbvpn.database.Profile
 import com.github.nbvpn.database.ProfileManager
 import com.github.nbvpn.preference.DataStore
 import com.github.nbvpn.preference.OnPreferenceDataStoreChangeListener
-import com.github.nbvpn.utils.Key
-import com.github.nbvpn.utils.responseLength
-import com.github.nbvpn.utils.thread
+import com.github.nbvpn.utils.*
 import com.github.nbvpn.widget.ServiceButton
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.DrawerBuilder
@@ -71,12 +67,15 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), ShadowsocksConnection.Interface, Drawer.OnDrawerItemClickListener,
         OnPreferenceDataStoreChangeListener {
+
+
     companion object {
         private const val TAG = "ShadowsocksMainActivity"
         private const val REQUEST_CONNECT = 1
 
         private const val DRAWER_PROFILES = 0L
         private const val DRAWER_GLOBAL_SETTINGS = 1L
+        private const val DRAWER_GLOBAL_STATIS = 2L
         private const val DRAWER_ABOUT = 3L
         private const val DRAWER_FAQ = 4L
         private const val DRAWER_CUSTOM_RULES = 5L
@@ -158,6 +157,23 @@ class MainActivity : AppCompatActivity(), ShadowsocksConnection.Interface, Drawe
             child?.onTrafficUpdated(profileId, txRate, rxRate, txTotal, rxTotal)
     }
 
+    fun registerReceiver() {
+        var intentFilter = IntentFilter()
+        intentFilter.addAction(Action.STATIS_RECORD)
+        val closeReceiver = broadcastReceiver { _, intent ->
+            when (intent.action) {
+                Action.STATIS_RECORD -> {
+                    var hostname:String = intent.getStringExtra("hostname")
+                    val child = supportFragmentManager.findFragmentById(R.id.fragment_holder) as ToolbarFragment?
+                    if (state != BaseService.STOPPING)
+                        child?.onStatisAdd(HostRecordEntity(hostname, Date()))
+                    Log.e("MainActivity", hostname)
+                }
+            }
+        }
+        registerReceiver(closeReceiver, intentFilter)
+    }
+
     /**
      * Based on: https://android.googlesource.com/platform/frameworks/base/+/97bfd27/services/core/java/com/android/server/connectivity/NetworkMonitor.java#879
      */
@@ -215,6 +231,7 @@ class MainActivity : AppCompatActivity(), ShadowsocksConnection.Interface, Drawe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.layout_main)
+        registerReceiver() //注册广播
         drawer = DrawerBuilder()
                 .withActivity(this)
                 .withTranslucentStatusBar(true)
@@ -234,6 +251,11 @@ class MainActivity : AppCompatActivity(), ShadowsocksConnection.Interface, Drawe
                                 .withIdentifier(DRAWER_GLOBAL_SETTINGS)
                                 .withName(R.string.settings)
                                 .withIcon(AppCompatResources.getDrawable(this, R.drawable.ic_action_settings))
+                                .withIconTintingEnabled(true),
+                        PrimaryDrawerItem()
+                                .withIdentifier(DRAWER_GLOBAL_STATIS)
+                                .withName(R.string.statis)
+                                .withIcon(AppCompatResources.getDrawable(this, R.drawable.ic_action_statis))
                                 .withIconTintingEnabled(true)
                 )
                 .addStickyDrawerItems(
@@ -339,6 +361,7 @@ class MainActivity : AppCompatActivity(), ShadowsocksConnection.Interface, Drawe
             when (id) {
                 DRAWER_PROFILES -> displayFragment(ProfilesFragment())
                 DRAWER_GLOBAL_SETTINGS -> displayFragment(GlobalSettingsFragment())
+                DRAWER_GLOBAL_STATIS -> displayFragment(StatisFragment())
                 DRAWER_ABOUT -> {
                     app.track(TAG, "about")
                     displayFragment(AboutFragment())

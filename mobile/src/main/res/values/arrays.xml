@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="proxy_type_entry" translatable="false">
+        <item>@string/proxy_type_Shadowsocks</item>
+        <item>@string/proxy_type_Socks5</item>
+        <item>@string/proxy_type_HTTP</item>
+    </string-array>
+    <string-array name="proxy_type_value" translatable="false">
+        <item>shadowsocks</item>
+        <item>socks5</item>
+        <item>http</item>
+    </string-array>
+
     <string-array name="enc_method_entry" translatable="false">
         <item>RC4-MD5</item>
         <item>AES-128-CFB</item>
@@ -225,6 +236,8 @@
         <item>@string/acl_rule_templates_generic</item>
         <item>@string/acl_rule_templates_domain</item>
         <item>@string/acl_rule_online_config</item>
+        <item>@string/acl_rule_domain_keyword</item>
+        <item>@string/acl_rule_domain_suffix</item>
     </string-array>
 
     <string-array name="service_modes">

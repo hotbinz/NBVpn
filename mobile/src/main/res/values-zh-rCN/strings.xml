@@ -59,6 +59,8 @@
 <!-- menu category -->
 <string name="profiles">"配置文件"</string>
 <string name="settings">"设置选项"</string>
+<string name="statis">流量统计</string>
+<string name="statis_url">按URL统计</string>
 <string name="faq">"常见问题"</string>
 <string name="about">"关于"</string>
 <string name="about_title">"流弊 (NBVpn) %s"</string>
@@ -111,6 +113,9 @@
 <string name="route_entry_chinalist">"仅代理中国大陆地址"</string>
 <string name="acl_rule_templates_generic">"子网/域名 PCRE 正则表达式"</string>
 <string name="acl_rule_templates_domain">"域名及其子域名"</string>
+
+<!-- proxy type -->
+<string name="proxy_type">代理类型</string>
 
 <!-- plugin -->
 <string name="plugin">"插件"</string>

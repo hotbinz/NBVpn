@@ -24,6 +24,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.Toolbar
 import android.view.View
+import com.github.nbvpn.utils.HostRecordEntity
 
 /**
  * @author Mygod
@@ -39,6 +40,7 @@ open class ToolbarFragment : Fragment() {
     }
 
     open fun onTrafficUpdated(profileId: Int, txRate: Long, rxRate: Long, txTotal: Long, rxTotal: Long) { }
+    open fun onStatisAdd(hostRecordEntity : HostRecordEntity) { }
 
     open fun onBackPressed(): Boolean = false
 }

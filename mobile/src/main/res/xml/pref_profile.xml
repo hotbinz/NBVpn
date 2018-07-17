@@ -21,6 +21,12 @@
                 android:maxLength="5"
                 app:pref_summaryHasText="%s"
                 android:title="@string/remote_port"/>
+        <SimpleMenuPreference
+            android:key="proxyType"
+            android:entries="@array/proxy_type_entry"
+            android:entryValues="@array/proxy_type_value"
+            android:summary="%s"
+            android:title="@string/proxy_type"/>
         <AutoSummaryEditTextPreference
                 android:inputType="textPassword"
                 app:pref_summaryPasswordSubstituteLength="0"

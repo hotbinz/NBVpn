@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<string name="app_name">"影梭"</string>
+<string name="app_name">"NBVpn"</string>
 <string name="quick_toggle">"切換"</string>
 
 <!-- misc -->
@@ -61,6 +61,7 @@
 
 <!-- menu category -->
 <string name="profiles">"設定檔"</string>
+<string name="statis">流量統計</string>
 <string name="settings">"設定"</string>
 <string name="faq">"常見問題"</string>
 <string name="about">"關於"</string>
@@ -114,6 +115,9 @@
 <string name="route_entry_chinalist">"China List"</string>
 <string name="acl_rule_templates_generic">"子網路/主機名稱 PCRE 模式"</string>
 <string name="acl_rule_templates_domain">"網域及其所有子網域"</string>
+
+<!-- proxy type -->
+<string name="proxy_type">代理管道</string>
 
 <!-- plugin -->
 <string name="plugin">"外掛程式"</string>

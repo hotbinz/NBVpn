@@ -59,8 +59,10 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.j256.ormlite.logger.LocalLog
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
+import com.tencent.bugly.crashreport.CrashReport
 import java.io.File
 import java.io.IOException
+import java.util.*
 
 class App : Application() {
     companion object {
@@ -89,6 +91,13 @@ class App : Application() {
     fun reloadService() = sendBroadcast(Intent(Action.RELOAD))
     fun stopService() = sendBroadcast(Intent(Action.CLOSE))
 
+    fun sendStatisInfo(resultData: String) {
+        var intent = Intent(Action.STATIS_RECORD)
+        intent.putExtra("hostname", resultData)
+        intent.putExtra("date", Date())
+        sendBroadcast(intent)
+    }
+
     val currentProfile: Profile? get() =
         if (DataStore.directBootAware) DirectBoot.getDeviceProfile() else ProfileManager.getProfile(DataStore.profileId)
 
@@ -114,6 +123,7 @@ class App : Application() {
     }
 
     override fun onCreate() {
+        CrashReport.initCrashReport(applicationContext, "989702b814", false);
         super.onCreate()
         app = this
         if (!BuildConfig.DEBUG) System.setProperty(LocalLog.LOCAL_LOG_LEVEL_PROPERTY, "ERROR")

@@ -32,6 +32,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceDataStore
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.MenuItem
 import com.github.nbvpn.App.Companion.app
 import com.github.nbvpn.database.Profile
@@ -49,6 +50,7 @@ import com.github.nbvpn.utils.DirectBoot
 import com.github.nbvpn.utils.Key
 import com.takisoft.fix.support.v7.preference.EditTextPreference
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompatDividers
+import com.takisoft.fix.support.v7.preference.SimpleMenuPreference
 
 class ProfileConfigFragment : PreferenceFragmentCompatDividers(), Toolbar.OnMenuItemClickListener,
         Preference.OnPreferenceChangeListener, OnPreferenceDataStoreChangeListener {
@@ -62,6 +64,7 @@ class ProfileConfigFragment : PreferenceFragmentCompatDividers(), Toolbar.OnMenu
     private lateinit var pluginConfigure: EditTextPreference
     private lateinit var pluginConfiguration: PluginConfiguration
     private lateinit var receiver: BroadcastReceiver
+    private lateinit var proxyType: SimpleMenuPreference
 
     override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
         preferenceManager.preferenceDataStore = DataStore.privateStore
@@ -73,6 +76,15 @@ class ProfileConfigFragment : PreferenceFragmentCompatDividers(), Toolbar.OnMenu
             findPreference(Key.remotePort).summary = "1337"
             findPreference(Key.password).summary = "\u2022".repeat(32)
         }
+        //代理方式
+        proxyType = findPreference(Key.proxyType) as SimpleMenuPreference
+        proxyType.setOnPreferenceChangeListener { _, newValue ->
+            initProxyType(newValue.toString())
+            true
+        }
+        val profile = ProfileManager.getProfile(profileId) ?: Profile()
+        initProxyType(profile.proxyType)
+        //APP分流
         val serviceMode = DataStore.serviceMode
         findPreference(Key.remoteDns).isEnabled = serviceMode != Key.modeProxy
         isProxyApps = findPreference(Key.proxyApps) as SwitchPreference
@@ -82,7 +94,9 @@ class ProfileConfigFragment : PreferenceFragmentCompatDividers(), Toolbar.OnMenu
             isProxyApps.isChecked = true
             false
         }
+        //DNS判断
         findPreference(Key.udpdns).isEnabled = serviceMode != Key.modeProxy
+        //插件设置
         plugin = findPreference(Key.plugin) as IconListPreference
         pluginConfigure = findPreference(Key.pluginConfigure) as EditTextPreference
         plugin.unknownValueSummary = getString(R.string.plugin_unknown)
@@ -100,6 +114,17 @@ class ProfileConfigFragment : PreferenceFragmentCompatDividers(), Toolbar.OnMenu
         initPlugins()
         receiver = app.listenForPackageChanges(false) { initPlugins() }
         DataStore.privateStore.registerChangeListener(this)
+    }
+
+    private fun initProxyType(newValue:String) {
+        if("socks5" == newValue || "http" == newValue) {
+            findPreference(Key.password).isVisible = false
+            findPreference(Key.method).isVisible = false
+        }
+        else {
+            findPreference(Key.password).isVisible = true
+            findPreference(Key.method).isVisible = true
+        }
     }
 
     private fun initPlugins() {

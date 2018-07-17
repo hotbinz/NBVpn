@@ -40,10 +40,9 @@ import com.github.nbvpn.acl.Acl
 import com.github.nbvpn.preference.DataStore
 import com.github.nbvpn.utils.Subnet
 import com.github.nbvpn.utils.parseNumericAddress
-import java.io.File
-import java.io.FileDescriptor
-import java.io.IOException
+import java.io.*
 import java.lang.reflect.Method
+import java.nio.ByteBuffer
 import java.util.*
 import android.net.VpnService as BaseVpnService
 
@@ -230,16 +229,27 @@ class VpnService : BaseVpnService(), LocalDnsService.Interface {
         this.conn = conn
         val fd = conn.fd
 
+        //获取VPN流量
+        val vpnTrafficMonitorThread = VpnTrafficMonitorThread(conn)
+        vpnTrafficMonitorThread.start()
+        //获取VPN流量-----END
+
         if (BuildCompat.isAtLeastP()) {
             // we want REQUEST here instead of LISTEN
             connectivity.requestNetwork(defaultNetworkRequest, defaultNetworkCallback)
             listeningForDefaultNetwork = true
         }
-
+        //添加socket5/HTTP代理
+        var serverIP = profile.host
+        var portProxy = profile.remotePort
+        if("shadowsocks" == profile.proxyType) {
+            serverIP = "127.0.0.1"
+            portProxy = DataStore.portProxy
+        }
         val cmd = arrayListOf(File(applicationInfo.nativeLibraryDir, Executable.TUN2SOCKS).absolutePath,
                 "--netif-ipaddr", PRIVATE_VLAN.format(Locale.ENGLISH, "2"),
                 "--netif-netmask", "255.255.255.0",
-                "--socks-server-addr", "127.0.0.1:${DataStore.portProxy}",
+                "--socks-server-addr", "${serverIP}:${portProxy}",
                 "--tunfd", fd.toString(),
                 "--tunmtu", VPN_MTU.toString(),
                 "--sock-path", "sock_path",

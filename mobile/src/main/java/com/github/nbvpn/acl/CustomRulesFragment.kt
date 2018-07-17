@@ -69,7 +69,9 @@ class CustomRulesFragment : ToolbarFragment(), Toolbar.OnMenuItemClickListener, 
     private enum class Template {
         Generic,
         Domain,
-        Url;
+        Url,
+        DomainKeyword,
+        Domainsuffix;
     }
     private inner class AclRuleDialog(item: Any = "") : TextWatcher, AdapterView.OnItemSelectedListener {
         val builder: AlertDialog.Builder
@@ -142,6 +144,19 @@ class CustomRulesFragment : ToolbarFragment(), Toolbar.OnMenuItemClickListener, 
                 } catch (e: MalformedURLException) {
                     e.message
                 }
+                //huobin修改
+                Template.DomainKeyword -> try {
+                    IDN.toASCII(value.toString(), IDN.ALLOW_UNASSIGNED or IDN.USE_STD3_ASCII_RULES)
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e.cause?.message ?: e.message
+                }
+                Template.Domainsuffix -> try {
+                    IDN.toASCII(value.toString(), IDN.ALLOW_UNASSIGNED or IDN.USE_STD3_ASCII_RULES)
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e.cause?.message ?: e.message
+                }
             }
             inputLayout.error = error
             positive.isEnabled = error == null
@@ -154,6 +169,11 @@ class CustomRulesFragment : ToolbarFragment(), Toolbar.OnMenuItemClickListener, 
                 Template.Domain -> adapter.addHostname(TEMPLATE_REGEX_DOMAIN.format(Locale.ENGLISH, IDN.toASCII(text,
                         IDN.ALLOW_UNASSIGNED or IDN.USE_STD3_ASCII_RULES).replace(".", "\\.")))
                 Template.Url -> adapter.addURL(URL(text))
+            //huobin修改
+                Template.DomainKeyword -> adapter.addHostname(TEMPLATE_REGEX_DOMAIN.format(Locale.ENGLISH, IDN.toASCII(text,
+                        IDN.ALLOW_UNASSIGNED or IDN.USE_STD3_ASCII_RULES).replace(".", "\\.")))
+                Template.Domainsuffix -> adapter.addHostname(TEMPLATE_REGEX_DOMAIN.format(Locale.ENGLISH, IDN.toASCII(text,
+                        IDN.ALLOW_UNASSIGNED or IDN.USE_STD3_ASCII_RULES).replace(".", "\\.")))
             }
         }
     }
