@@ -32,6 +32,14 @@ import com.github.nbvpn.utils.HostRecordEntity
 open class ToolbarFragment : Fragment() {
     protected lateinit var toolbar: Toolbar
 
+    object Data {
+        var hostsRecordList= StatisRecord.hostRecord
+        fun AddStatis(hostRecordEntity : HostRecordEntity) {
+            hostsRecordList.add(hostRecordEntity)
+        }
+    }
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         toolbar = view.findViewById(R.id.toolbar)
@@ -40,7 +48,6 @@ open class ToolbarFragment : Fragment() {
     }
 
     open fun onTrafficUpdated(profileId: Int, txRate: Long, rxRate: Long, txTotal: Long, rxTotal: Long) { }
-    open fun onStatisAdd(hostRecordEntity : HostRecordEntity) { }
-
+    open fun onStatisAdd(hostRecordEntity : HostRecordEntity) {}
     open fun onBackPressed(): Boolean = false
 }

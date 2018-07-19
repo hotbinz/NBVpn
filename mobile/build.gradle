@@ -76,8 +76,6 @@ dependencies {
     implementation 'xyz.belvi.mobilevision:barcodescanner:2.0.3'
     implementation 'com.tencent.bugly:crashreport:latest.release'
     implementation 'com.tencent.bugly:nativecrashreport:latest.release'
-    implementation 'org.pcap4j:pcap4j-core:1.7.3'
-    implementation 'org.pcap4j:pcap4j-packetfactory-static:1.7.3'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "com.android.support.test:runner:$androidTestVersion"
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$androidEspressoVersion"

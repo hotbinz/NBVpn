@@ -241,6 +241,29 @@ LOCAL_CFLAGS := -std=gnu99 -DUSE_IPTABLES \
 include $(BUILD_SHARED_EXECUTABLE)
 
 ########################################################
+## plugin-obfs2socket5
+########################################################
+
+include $(CLEAR_VARS)
+OBFS2SOCKET5_SOURCES := utils.c jconf.c json.c encrypt.c netutils.c local.c obfs_http.c obfs_tls.c obfs_socket5.c options.c base64.c android.c
+
+LOCAL_MODULE    := plugin-obfs2socket5
+LOCAL_SRC_FILES := $(addprefix simple-obfs/src/, $(OBFS2SOCKET5_SOURCES))
+LOCAL_CFLAGS    := -Wall -O2 -fno-strict-aliasing -DMODULE_LOCAL \
+                    -DANDROID -DHAVE_CONFIG_H \
+                    -DCONNECT_IN_PROGRESS=EINPROGRESS \
+                    -I$(LOCAL_PATH)/include \
+					-I$(LOCAL_PATH)/libancillary \
+					-I$(LOCAL_PATH)/simple-obfs/libcork/include \
+					-I$(LOCAL_PATH)/libev \
+					-I$(LOCAL_PATH)/include/simple-obfs
+
+LOCAL_STATIC_LIBRARIES := libev libcork libancillary
+LOCAL_LDLIBS := -llog
+include $(BUILD_SHARED_EXECUTABLE)
+
+
+########################################################
 ## shadowsocks-libev local
 ########################################################
 

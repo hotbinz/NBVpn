@@ -51,7 +51,7 @@ class StatisFragment : ToolbarFragment() {
     }
 
     private inner class AclRulesAdapter : RecyclerView.Adapter<StatisFragment.AclRuleViewHolder>() {
-        private val hosts = StatisRecord.hostRecord
+        private val hosts = ToolbarFragment.Data.hostsRecordList
         override fun onBindViewHolder(holder: StatisFragment.AclRuleViewHolder, i: Int) {
             holder.bind(hosts[i])
         }
@@ -72,6 +72,7 @@ class StatisFragment : ToolbarFragment() {
 
     override fun onStatisAdd(hostRecordEntity : HostRecordEntity) {
         adapter.add(hostRecordEntity)
+        ToolbarFragment.Data.AddStatis(hostRecordEntity)
     }
 
     private inner class AclRuleViewHolder(view: View) : RecyclerView.ViewHolder(view),

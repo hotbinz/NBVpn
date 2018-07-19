@@ -164,10 +164,14 @@ class MainActivity : AppCompatActivity(), ShadowsocksConnection.Interface, Drawe
             when (intent.action) {
                 Action.STATIS_RECORD -> {
                     var hostname:String = intent.getStringExtra("hostname")
-                    val child = supportFragmentManager.findFragmentById(R.id.fragment_holder) as ToolbarFragment?
+
+                    val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_holder) as ToolbarFragment
                     if (state != BaseService.STOPPING)
-                        child?.onStatisAdd(HostRecordEntity(hostname, Date()))
-                    Log.e("MainActivity", hostname)
+                        if (!currentFragment.onBackPressed())
+                            if (currentFragment is StatisFragment)
+                                currentFragment.onStatisAdd(HostRecordEntity(hostname, Date()))
+                            else
+                                ToolbarFragment.Data.AddStatis(HostRecordEntity(hostname, Date()))
                 }
             }
         }
