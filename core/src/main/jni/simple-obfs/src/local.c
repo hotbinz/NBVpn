@@ -1115,7 +1115,7 @@ main(int argc, char **argv)
             else if (strcmp(conf->obfs, obfs_tls->name) == 0)
                 obfs_para = obfs_tls;
             else if (strcmp(conf->obfs, obfs_socket5->name) == 0)
-                obfs_para = obfs_socket5;
+                obfs_para = obfs_tls;
         }
         if (obfs_host == NULL) {
             obfs_host = conf->obfs_host;

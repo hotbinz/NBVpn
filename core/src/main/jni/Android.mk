@@ -241,13 +241,13 @@ LOCAL_CFLAGS := -std=gnu99 -DUSE_IPTABLES \
 include $(BUILD_SHARED_EXECUTABLE)
 
 ########################################################
-## plugin-obfs2socket5
+## obfs-socket5
 ########################################################
 
 include $(CLEAR_VARS)
 OBFS2SOCKET5_SOURCES := utils.c jconf.c json.c encrypt.c netutils.c local.c obfs_http.c obfs_tls.c obfs_socket5.c options.c base64.c android.c
 
-LOCAL_MODULE    := plugin-obfs2socket5
+LOCAL_MODULE    := obfs-socket5
 LOCAL_SRC_FILES := $(addprefix simple-obfs/src/, $(OBFS2SOCKET5_SOURCES))
 LOCAL_CFLAGS    := -Wall -O2 -fno-strict-aliasing -DMODULE_LOCAL \
                     -DANDROID -DHAVE_CONFIG_H \

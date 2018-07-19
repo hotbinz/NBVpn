@@ -239,13 +239,9 @@ class VpnService : BaseVpnService(), LocalDnsService.Interface {
             connectivity.requestNetwork(defaultNetworkRequest, defaultNetworkCallback)
             listeningForDefaultNetwork = true
         }
-        //添加socket5/HTTP代理
-        var serverIP = profile.host
-        var portProxy = profile.remotePort
-        if("shadowsocks" == profile.proxyType) {
-            serverIP = "127.0.0.1"
-            portProxy = DataStore.portProxy
-        }
+
+        var serverIP = "127.0.0.1"
+        var portProxy = DataStore.portProxy
         val cmd = arrayListOf(File(applicationInfo.nativeLibraryDir, Executable.TUN2SOCKS).absolutePath,
                 "--netif-ipaddr", PRIVATE_VLAN.format(Locale.ENGLISH, "2"),
                 "--netif-netmask", "255.255.255.0",

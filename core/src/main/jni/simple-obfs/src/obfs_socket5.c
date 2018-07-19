@@ -34,29 +34,31 @@
 struct BSocksClient_auth_info socks_auth_info[2];
 size_t socks_num_auth_info;
 
-static const char *http_request_template =
-    "GET %s HTTP/1.1\r\n"
-    "Host: %s\r\n"
-    "User-Agent: curl/7.%d.%d\r\n"
-    "Upgrade: websocket\r\n"
-    "Connection: Upgrade\r\n"
-    "Sec-WebSocket-Key: %s\r\n"
-    "Content-Length: %lu\r\n"
-    "\r\n";
-
-static const char *http_response_template =
-    "HTTP/1.1 101 Switching Protocols\r\n"
-    "Server: nginx/1.%d.%d\r\n"
-    "Date: %s\r\n"
-    "Upgrade: websocket\r\n"
-    "Connection: Upgrade\r\n"
-    "Sec-WebSocket-Accept: %s\r\n"
-    "\r\n";
+//static const char *http_request_template =
+//    "GET %s HTTP/1.1\r\n"
+//    "Host: %s\r\n"
+//    "User-Agent: curl/7.%d.%d\r\n"
+//    "Upgrade: websocket\r\n"
+//    "Connection: Upgrade\r\n"
+//    "Sec-WebSocket-Key: %s\r\n"
+//    "Content-Length: %lu\r\n"
+//    "\r\n";
+//
+//static const char *http_response_template =
+//    "HTTP/1.1 101 Switching Protocols\r\n"
+//    "Server: nginx/1.%d.%d\r\n"
+//    "Date: %s\r\n"
+//    "Upgrade: websocket\r\n"
+//    "Connection: Upgrade\r\n"
+//    "Sec-WebSocket-Accept: %s\r\n"
+//    "\r\n";
 
 static int obfs_socket5_request(buffer_t *, size_t, obfs_t *);
 static int obfs_socket5_response(buffer_t *, size_t, obfs_t *);
 static int deobfs_socket5_header(buffer_t *, size_t, obfs_t *);
 static int check_http_header(buffer_t *buf);
+static void add_socks_auth_info();
+struct BSocksClient_auth_info BSocksClient_auth_none (void);
 static void disable_http(obfs_t *obfs);
 static int is_enable_http(obfs_t *obfs);
 
@@ -65,7 +67,7 @@ static int next_header(const char **, int *);
 
 static obfs_para_t obfs_socket5_st = {
     .name            = "socket5",
-    .port            = 80,
+    .port            = 1080,
     .send_empty_response_upon_connection = true,
 
     .obfs_request    = &obfs_socket5_request,
@@ -86,6 +88,7 @@ obfs_socket5_request(buffer_t *buf, size_t cap, obfs_t *obfs)
 
     static buffer_t tmp = { 0, 0, 0, NULL };
     if(obfs->obfs_stage == 0) {
+        LOGI("obfs_socket5_request");
         size_t tls_len = buf->len;
         // write hello header
         add_socks_auth_info();
@@ -107,71 +110,8 @@ obfs_socket5_request(buffer_t *buf, size_t cap, obfs_t *obfs)
     }
     else if (obfs->obfs_stage == 1) {
 
-        static int major_version = 0;
-        static int minor_version = 0;
-
-        major_version = major_version ? major_version : rand() % 51;
-        minor_version = minor_version ? minor_version : rand() % 2;
-
-        char host_port[256];
-        char http_header[512];
-        uint8_t key[16];
-        char b64[64];
-
-        if (obfs_socket5->port != 80)
-            snprintf(host_port, sizeof(host_port), "%s:%d", obfs_socket5->host, obfs_socket5->port);
-        else
-            snprintf(host_port, sizeof(host_port), "%s", obfs_socket5->host);
-
-        rand_bytes(key, 16);
-        base64_encode(b64, 64, key, 16);
-
-        size_t obfs_len =
-                snprintf(http_header, sizeof(http_header), http_request_template,
-                         obfs_socket5->uri, host_port, major_version, minor_version, b64, buf->len);
-        size_t buf_len = buf->len;
-
-        brealloc(buf, obfs_len + buf_len, cap);
-
-        memmove(buf->data + obfs_len, buf->data, buf_len);
-        memcpy(buf->data, http_header, obfs_len);
-
-        buf->len = obfs_len + buf_len;
     }
     return buf->len;
-}
-
-static void
-add_socks_auth_info()
-{
-    // add none socks authentication method
-    socks_auth_info[0] = BSocksClient_auth_none();
-    socks_num_auth_info = 1;
-
-    // add password socks authentication method
-//    if (options.username) {
-//        const char *password;
-//        size_t password_len;
-//        if (options.password) {
-//            password = options.password;
-//            password_len = strlen(options.password);
-//        } else {
-//            if (!read_file(options.password_file, &password_file_contents, &password_len)) {
-//                BLog(BLOG_ERROR, "failed to read password file");
-//                return 0;
-//            }
-//            password = (char *)password_file_contents;
-//        }
-//
-//        socks_auth_info[socks_num_auth_info++] = BSocksClient_auth_password(
-//            options.username, strlen(options.username),password, password_len);
-//    }
-}
-struct BSocksClient_auth_info BSocksClient_auth_none (void)
-{
-    struct BSocksClient_auth_info info;
-    info.auth_type = SOCKS_METHOD_NO_AUTHENTICATION_REQUIRED;
-    return info;
 }
 
 static int
@@ -181,9 +121,10 @@ obfs_socket5_response(buffer_t *buf, size_t cap, obfs_t *obfs)
     if (obfs == NULL || obfs->obfs_stage != 0) return 0;
 
     if (obfs->obfs_stage == 0) {
+        LOGI("obfs_socket5_response");
         static buffer_t tmp = { 0, 0, 0, NULL };
         size_t buf_len = buf->len;
-        size_t hello_len = sizeof(struct tls_server_hello);
+        size_t hello_len = sizeof(struct socks_server_hello);
         size_t tls_len = buf_len + hello_len;
 
         brealloc(&tmp, buf_len, cap);
@@ -194,38 +135,6 @@ obfs_socket5_response(buffer_t *buf, size_t cap, obfs_t *obfs)
     }
     else if (obfs->obfs_stage == 1) {
 
-        static int major_version = 0;
-        static int minor_version = 0;
-
-        major_version = major_version ? major_version : rand() % 11;
-        minor_version = minor_version ? minor_version : rand() % 12;
-
-        char http_header[512];
-        char datetime[64];
-        uint8_t key[16];
-        char b64[64];
-
-        time_t now;
-        struct tm *tm_now;
-
-        time(&now);
-        tm_now = localtime(&now);
-        strftime(datetime, 64, "%a, %d %b %Y %H:%M:%S GMT", tm_now);
-
-        rand_bytes(key, 16);
-        base64_encode(b64, 64, key, 16);
-
-        size_t buf_len = buf->len;
-        size_t obfs_len =
-                snprintf(http_header, sizeof(http_header), http_response_template,
-                         major_version, minor_version, datetime, b64);
-
-        brealloc(buf, obfs_len + buf_len, cap);
-
-        memmove(buf->data + obfs_len, buf->data, buf_len);
-        memcpy(buf->data, http_header, obfs_len);
-
-        buf->len = obfs_len + buf_len;
     }
     return buf->len;
 }
@@ -383,6 +292,41 @@ next_header(const char **data, int *len)
 
     return header_len;
 }
+
+
+static void
+add_socks_auth_info()
+{
+    // add none socks authentication method
+    socks_auth_info[0] = BSocksClient_auth_none();
+    socks_num_auth_info = 1;
+
+    // add password socks authentication method
+//    if (options.username) {
+//        const char *password;
+//        size_t password_len;
+//        if (options.password) {
+//            password = options.password;
+//            password_len = strlen(options.password);
+//        } else {
+//            if (!read_file(options.password_file, &password_file_contents, &password_len)) {
+//                BLog(BLOG_ERROR, "failed to read password file");
+//                return 0;
+//            }
+//            password = (char *)password_file_contents;
+//        }
+//
+//        socks_auth_info[socks_num_auth_info++] = BSocksClient_auth_password(
+//            options.username, strlen(options.username),password, password_len);
+//    }
+}
+struct BSocksClient_auth_info BSocksClient_auth_none (void)
+{
+    struct BSocksClient_auth_info info;
+    info.auth_type = SOCKS_METHOD_NO_AUTHENTICATION_REQUIRED;
+    return info;
+}
+
 
 static void
 disable_http(obfs_t *obfs)

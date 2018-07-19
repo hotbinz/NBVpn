@@ -52,7 +52,6 @@ static uint8_t hton8 (uint8_t x)
 {
     return x;
 }
-struct BSocksClient_auth_info BSocksClient_auth_none (void);
 extern obfs_para_t *obfs_socket5;
 
 #endif

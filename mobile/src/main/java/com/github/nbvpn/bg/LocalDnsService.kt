@@ -36,14 +36,6 @@ object LocalDnsService {
             val data = data
             val profile = data.profile!!
 
-            //添加socket5/HTTP代理
-            var serverIP = profile.host
-            var portProxy = profile.remotePort
-            if("shadowsocks" == profile.proxyType) {
-                serverIP = "127.0.0.1"
-                portProxy = DataStore.portProxy
-            }
-
             fun makeDns(name: String, address: String, timeout: Int, edns: Boolean = true): JSONObject {
                 val dns = JSONObject()
                 .put("Name", name)
@@ -55,7 +47,7 @@ object LocalDnsService {
                 .put("EDNSClientSubnet", JSONObject().put("Policy", "disable"))
                 if (edns) dns
                 .put("Protocol", "tcp")
-                .put("Socks5Address", "${serverIP}:${portProxy}")
+                .put("Socks5Address", "127.0.0.1:" + DataStore.portProxy)
                 else dns.put("Protocol", "udp")
 
                 return dns

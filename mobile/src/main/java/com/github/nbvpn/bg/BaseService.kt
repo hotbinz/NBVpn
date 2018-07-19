@@ -204,6 +204,11 @@ object BaseService {
                         .put("plugin", Commandline.toString(service.buildAdditionalArguments(pluginCmd)))
                         .put("plugin_opts", plugin.toString())
             }
+            else if (profile.proxyType == "socks5") {
+                //添加socket5/HTTP代理
+                config.put("plugin","libobfs-socket5")
+                        .put("plugin-opts","obfs=socket5; obfs-host=${profile.host}; -p 1080")
+            }
             // sensitive Shadowsocks config is stored in
             val file = File(if (UserManagerCompat.isUserUnlocked(app)) app.filesDir else @TargetApi(24) {
                 app.deviceContext.noBackupFilesDir  // only API 24+ will be in locked state
