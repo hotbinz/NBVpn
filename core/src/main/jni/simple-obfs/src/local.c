@@ -98,7 +98,6 @@ static int ipv6first = 0;
 static int fast_open = 0;
 
 static obfs_para_t *obfs_para  = NULL;
-
 #ifdef HAVE_SETRLIMIT
 static int nofile = 0;
 #endif
@@ -356,6 +355,7 @@ server_recv_cb(EV_P_ ev_io *w, int revents)
                         s = send(remote->fd, remote->buf->data, remote->buf->len, 0);
                     }
 #else
+
                     int s = sendto(remote->fd, remote->buf->data, remote->buf->len, MSG_FASTOPEN,
                                    (struct sockaddr *)&(remote->addr), remote->addr_len);
 #endif
@@ -441,6 +441,9 @@ server_recv_cb(EV_P_ ev_io *w, int revents)
             server->stage = STAGE_STREAM;
 
             remote = create_remote(server->listener, NULL);
+//            if(obfs_para->name  == "socket5") {
+//                remote->direct = 1;
+//            }
 
             if (remote == NULL) {
                 LOGE("invalid remote addr");
@@ -524,7 +527,7 @@ remote_recv_cb(EV_P_ ev_io *w, int revents)
     ev_timer_again(EV_A_ & remote->recv_ctx->watcher);
 
     ssize_t r = recv(remote->fd, server->buf->data, BUF_SIZE, 0);
-
+    
     if (r == 0) {
         // connection closed
         close_and_free_remote(EV_A_ remote);
@@ -1115,7 +1118,7 @@ main(int argc, char **argv)
             else if (strcmp(conf->obfs, obfs_tls->name) == 0)
                 obfs_para = obfs_tls;
             else if (strcmp(conf->obfs, obfs_socket5->name) == 0)
-                obfs_para = obfs_tls;
+                obfs_para = obfs_socket5;
         }
         if (obfs_host == NULL) {
             obfs_host = conf->obfs_host;

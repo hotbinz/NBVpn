@@ -44,6 +44,7 @@ typedef struct obfs_para {
     uint16_t port;
     bool send_empty_response_upon_connection;
 
+    int(*const socket_init)();
     int(*const obfs_request)(buffer_t *, size_t, obfs_t *);
     int(*const obfs_response)(buffer_t *, size_t, obfs_t *);
     int(*const deobfs_request)(buffer_t *, size_t, obfs_t *);

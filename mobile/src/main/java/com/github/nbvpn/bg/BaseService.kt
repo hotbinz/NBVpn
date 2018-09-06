@@ -71,6 +71,10 @@ object BaseService {
 
     const val CONFIG_FILE = "shadowsocks.conf"
 
+    const val SSS_CONFIG_FILE = "sss.conf"
+    const val SSS_LOCAL_PROT = 8399
+    const val SSS_LOCAL_PASSWORD = "HUOBIN1"
+
 
     class Data internal constructor(private val service: Interface) {
         @Volatile var profile: Profile? = null
@@ -194,26 +198,51 @@ object BaseService {
             val config = JSONObject()
                     .put("server", profile.host)
                     .put("server_port", profile.remotePort)
-                    .put("password", profile.password)
                     .put("method", profile.method)
+
+            if (profile.proxyType == "socks5") {
+                config.put("password", SSS_LOCAL_PASSWORD)
+            }
+            else {
+                config.put("password", profile.password)
+            }
             val pluginPath = pluginPath
-            if (pluginPath != null) {
+            if (profile.proxyType != "shadowsocks") {
+                val pluginCmd = arrayListOf(File((service as Context).applicationInfo.nativeLibraryDir, Executable.SSS_PROXY).absolutePath)
+                pluginCmd.add("-c")
+                pluginCmd.add(buildSSSConfig().absolutePath)
+                pluginCmd.add("-d")
+                config
+                        .put("plugin", Commandline.toString(service.buildAdditionalArguments(pluginCmd)))
+                        .put("plugin_opts", profile.proxyType)
+            }
+            else if (pluginPath != null) {
                 val pluginCmd = arrayListOf(pluginPath)
                 if (TcpFastOpen.sendEnabled) pluginCmd.add("--fast-open")
                 config
                         .put("plugin", Commandline.toString(service.buildAdditionalArguments(pluginCmd)))
                         .put("plugin_opts", plugin.toString())
             }
-            else if (profile.proxyType == "socks5") {
-                //添加socket5/HTTP代理
-                config.put("plugin","libobfs-socket5")
-                        .put("plugin-opts","obfs=socket5; obfs-host=${profile.host}; -p 1080")
-            }
             // sensitive Shadowsocks config is stored in
             val file = File(if (UserManagerCompat.isUserUnlocked(app)) app.filesDir else @TargetApi(24) {
                 app.deviceContext.noBackupFilesDir  // only API 24+ will be in locked state
             }, CONFIG_FILE)
             shadowsocksConfigFile = file
+            file.writeText(config.toString())
+            return file
+        }
+
+        internal fun buildSSSConfig(): File {
+            val profile = profile!!
+            val config = JSONObject()
+                    .put("server_port", SSS_LOCAL_PROT)
+                    .put("proxy_url", "${profile.proxyType}://${profile.host}:${profile.remotePort}")
+                    .put("password", SSS_LOCAL_PASSWORD)
+
+            // sensitive Shadowsocks config is stored in
+            val file = File(if (UserManagerCompat.isUserUnlocked(app)) app.filesDir else @TargetApi(24) {
+                app.deviceContext.noBackupFilesDir  // only API 24+ will be in locked state
+            }, SSS_CONFIG_FILE)
             file.writeText(config.toString())
             return file
         }
@@ -287,6 +316,10 @@ object BaseService {
 
             if (TcpFastOpen.sendEnabled) cmd += "--fast-open"
 
+            if (profile.proxyType != "shadowsocks") {
+                cmd += "--proxyprot"
+                cmd += SSS_LOCAL_PROT.toString()
+            }
             data.processes.start(cmd)
         }
 
@@ -298,7 +331,10 @@ object BaseService {
             else startService(Intent(this, javaClass))
         }
 
-        fun killProcesses() = data.processes.killAll()
+        fun killProcesses() {
+            data.processes.killAll()
+//            data.sss_processes.killAll()
+        }
 
         fun stopRunner(stopService: Boolean, msg: String? = null) {
             // channge the state

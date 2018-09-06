@@ -29,7 +29,7 @@ MKDIR %TARGET%\x86>nul 2>nul
 MKDIR %TARGET%\arm64-v8a>nul 2>nul 
 
 SET CC=%ANDROID_ARM_TOOLCHAIN%\bin\arm-linux-androideabi-gcc.exe
-
+ECHO %ANDROID_X86_CC%
 IF NOT EXIST %ANDROID_ARM_CC% (
 	ECHO "Make standalone toolchain for ARM arch"
     python.exe %ANDROID_NDK_HOME%\build\tools\make_standalone_toolchain.py --arch arm ^

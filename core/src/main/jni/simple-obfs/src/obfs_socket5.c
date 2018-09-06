@@ -26,6 +26,12 @@
 
 #include <strings.h>
 #include <ctype.h> /* isblank() */
+#include <simple-obfs/libcork/include/libcork/core.h>
+
+#define CT_HTONS(n) CORK_UINT16_HOST_TO_BIG(n)
+#define CT_NTOHS(n) CORK_UINT16_BIG_TO_HOST(n)
+#define CT_HTONL(n) CORK_UINT32_HOST_TO_BIG(n)
+#define CT_NTOHL(n) CORK_UINT32_BIG_TO_HOST(n)
 
 #include "base64.h"
 #include "utils.h"
@@ -33,37 +39,20 @@
 
 struct BSocksClient_auth_info socks_auth_info[2];
 size_t socks_num_auth_info;
-
-//static const char *http_request_template =
-//    "GET %s HTTP/1.1\r\n"
-//    "Host: %s\r\n"
-//    "User-Agent: curl/7.%d.%d\r\n"
-//    "Upgrade: websocket\r\n"
-//    "Connection: Upgrade\r\n"
-//    "Sec-WebSocket-Key: %s\r\n"
-//    "Content-Length: %lu\r\n"
-//    "\r\n";
-//
-//static const char *http_response_template =
-//    "HTTP/1.1 101 Switching Protocols\r\n"
-//    "Server: nginx/1.%d.%d\r\n"
-//    "Date: %s\r\n"
-//    "Upgrade: websocket\r\n"
-//    "Connection: Upgrade\r\n"
-//    "Sec-WebSocket-Accept: %s\r\n"
-//    "\r\n";
+size_t auth_finished;
 
 static int obfs_socket5_request(buffer_t *, size_t, obfs_t *);
 static int obfs_socket5_response(buffer_t *, size_t, obfs_t *);
-static int deobfs_socket5_header(buffer_t *, size_t, obfs_t *);
-static int check_http_header(buffer_t *buf);
+static int deobfs_socket5_request(buffer_t *, size_t, obfs_t *);
+static int deobfs_socket5_response(buffer_t *buf, size_t cap, obfs_t *obfs);
+static int obfs_app_data(buffer_t *, size_t, obfs_t *);
+static int deobfs_app_data(buffer_t *, size_t, obfs_t *);
+static int check_socket5_request(buffer_t *buf);
 static void add_socks_auth_info();
 struct BSocksClient_auth_info BSocksClient_auth_none (void);
-static void disable_http(obfs_t *obfs);
-static int is_enable_http(obfs_t *obfs);
+static void disable_socket5(obfs_t *obfs);
+static int is_enable_socket5(obfs_t *obfs);
 
-static int get_header(const char *, const char *, int, char **);
-static int next_header(const char **, int *);
 
 static obfs_para_t obfs_socket5_st = {
     .name            = "socket5",
@@ -72,23 +61,85 @@ static obfs_para_t obfs_socket5_st = {
 
     .obfs_request    = &obfs_socket5_request,
     .obfs_response   = &obfs_socket5_response,
-    .deobfs_request  = &deobfs_socket5_header,
-    .deobfs_response = &deobfs_socket5_header,
-    .check_obfs      = &check_http_header,
-    .disable         = &disable_http,
-    .is_enable       = &is_enable_http
+    .deobfs_request  = &deobfs_socket5_request,
+    .deobfs_response = &deobfs_socket5_response,
+    .check_obfs      = &check_socket5_request,
+    .disable         = &disable_socket5,
+    .is_enable       = &is_enable_socket5
 };
 
 obfs_para_t *obfs_socket5 = &obfs_socket5_st;
 
 static int
+obfs_app_data(buffer_t *buf, size_t cap, obfs_t *obfs)
+{
+//    size_t buf_len = buf->len;
+//
+//    brealloc(buf, buf_len + 5, cap);
+//    memmove(buf->data + 5, buf->data, buf_len);
+//    memcpy(buf->data, tls_data_header, 3);
+//
+//    *(uint16_t*)(buf->data + 3) = CT_HTONS(buf_len);
+//    buf->len = buf_len + 5;
+
+    return 0;
+}
+
+static int
+deobfs_app_data(buffer_t *buf, size_t idx, obfs_t *obfs)
+{
+//    int bidx = idx, bofst = idx;
+//
+//    frame_t *frame = (frame_t *)obfs->extra;
+//
+//    while (bidx < buf->len) {
+//        if (frame->len == 0) {
+//            if (frame->idx >= 0 && frame->idx < 3
+//                && buf->data[bidx] != tls_data_header[frame->idx]) {
+//                return OBFS_ERROR;
+//            } else if (frame->idx >= 3 && frame->idx < 5) {
+//                memcpy(frame->buf + frame->idx - 3, buf->data + bidx, 1);
+//            } else if (frame->idx < 0) {
+//                bofst++;
+//            }
+//            frame->idx++;
+//            bidx++;
+//            if (frame->idx == 5) {
+//                frame->len = CT_NTOHS(*(uint16_t *)(frame->buf));
+//                frame->idx = 0;
+//            }
+//            continue;
+//        }
+//
+//        if (frame->len > 16384)
+//            return OBFS_ERROR;
+//
+//        int left_len = buf->len - bidx;
+//
+//        if (left_len > frame->len) {
+//            memmove(buf->data + bofst, buf->data + bidx, frame->len);
+//            bidx  += frame->len;
+//            bofst += frame->len;
+//            frame->len = 0;
+//        } else {
+//            memmove(buf->data + bofst, buf->data + bidx, left_len);
+//            bidx  = buf->len;
+//            bofst += left_len;
+//            frame->len -= left_len;
+//        }
+//    }
+//
+//    buf->len = bofst;
+
+    return OBFS_OK;
+}
+
+static int
 obfs_socket5_request(buffer_t *buf, size_t cap, obfs_t *obfs)
 {
-    if (obfs == NULL || obfs->obfs_stage != 0) return 0;
-
+    if (obfs == NULL || obfs->obfs_stage < 0) return 0;
     static buffer_t tmp = { 0, 0, 0, NULL };
     if(obfs->obfs_stage == 0) {
-        LOGI("obfs_socket5_request");
         size_t tls_len = buf->len;
         // write hello header
         add_socks_auth_info();
@@ -104,6 +155,7 @@ obfs_socket5_request(buffer_t *buf, size_t cap, obfs_t *obfs)
             tls_len += sizeof(method);
             memcpy(buf->data + sizeof(header) + i * sizeof(method), &method, sizeof(method));
         }
+        LOGI("obfs_socket5_request:%u", buf->data);
         buf->len = tls_len;
 
         obfs->obfs_stage++;
@@ -117,20 +169,17 @@ obfs_socket5_request(buffer_t *buf, size_t cap, obfs_t *obfs)
 static int
 obfs_socket5_response(buffer_t *buf, size_t cap, obfs_t *obfs)
 {
-
-    if (obfs == NULL || obfs->obfs_stage != 0) return 0;
-
+    LOGI("obfs_socket5_response:%u", buf->data);
+    if (obfs == NULL || obfs->obfs_stage < 0) return 0;
     if (obfs->obfs_stage == 0) {
-        LOGI("obfs_socket5_response");
-        static buffer_t tmp = { 0, 0, 0, NULL };
-        size_t buf_len = buf->len;
-        size_t hello_len = sizeof(struct socks_server_hello);
-        size_t tls_len = buf_len + hello_len;
+        struct socks_server_hello imsg;
+        memcpy(&imsg, buf->data, sizeof(imsg));
+        if (ntoh8(imsg.ver) != SOCKS_VERSION) {
+            LOGE("wrong version");
+            return OBFS_ERROR;
+        }
+        struct socks_request_header header;
 
-        brealloc(&tmp, buf_len, cap);
-        brealloc(buf,  tls_len, cap);
-
-        memcpy(tmp.data, buf->data, buf_len);
         obfs->obfs_stage++;
     }
     else if (obfs->obfs_stage == 1) {
@@ -140,10 +189,9 @@ obfs_socket5_response(buffer_t *buf, size_t cap, obfs_t *obfs)
 }
 
 static int
-deobfs_socket5_header(buffer_t *buf, size_t cap, obfs_t *obfs)
+deobfs_socket5_request(buffer_t *buf, size_t cap, obfs_t *obfs)
 {
     if (obfs == NULL || obfs->deobfs_stage != 0) return 0;
-
     char *data = buf->data;
     int len    = buf->len;
     int err    = -1;
@@ -171,126 +219,49 @@ deobfs_socket5_header(buffer_t *buf, size_t cap, obfs_t *obfs)
 }
 
 static int
-check_http_header(buffer_t *buf)
+deobfs_socket5_response(buffer_t *buf, size_t cap, obfs_t *obfs)
+{
+    if (obfs == NULL || obfs->deobfs_stage < 0) return 0;
+
+    if (obfs->deobfs_stage == 0) {
+
+        struct socks_server_hello imsg;
+        memcpy(&imsg, buf->data, sizeof(imsg));
+        if (ntoh8(imsg.ver) != SOCKS_VERSION) {
+            LOGE("wrong version");
+            return OBFS_ERROR;
+        }
+        struct socks_request_header header;
+        LOGI("deobfs_socket5_response:%u,%g", imsg.ver, imsg.method);
+        obfs->deobfs_stage++;
+
+    } else if (obfs->deobfs_stage == 1) {
+
+        return deobfs_app_data(buf, 0, obfs);
+
+    }
+
+    return 0;
+}
+
+static int
+check_socket5_request(buffer_t *buf)
 {
     char *data = buf->data;
     int len    = buf->len;
 
-    if (len < 4)
+    if (len < 11)
         return OBFS_NEED_MORE;
 
-    if (strncasecmp(data, "GET", 3) != 0)
+    if (data[0] == 0x16
+        && data[1] == 0x03
+        && data[2] == 0x01
+        && data[5] == 0x01
+        && data[9] == 0x03
+        && data[10] == 0x03)
+        return OBFS_OK;
+    else
         return OBFS_ERROR;
-
-    {
-        char *protocol;
-        int result = get_header("Upgrade:", data, len, &protocol);
-        if (result < 0) {
-            if (result == -1)
-                return OBFS_NEED_MORE;
-            else
-                return OBFS_ERROR;
-        }
-        if (strncmp(protocol, "websocket", result) != 0) {
-            free(protocol);
-            return OBFS_ERROR;
-        } else {
-            free(protocol);
-        }
-    }
-
-    if (obfs_socket5->host != NULL) {
-        char *hostname;
-        int i;
-
-        int result = get_header("Host:", data, len, &hostname);
-        if (result < 0) {
-            if (result == -1)
-                return OBFS_NEED_MORE;
-            else
-                return OBFS_ERROR;
-        }
-
-        /*
-         *  if the user specifies the port in the request, it is included here.
-         *  Host: example.com:80
-         *  so we trim off port portion
-         */
-        for (i = result - 1; i >= 0; i--)
-            if ((hostname)[i] == ':') {
-                (hostname)[i] = '\0';
-                result         = i;
-                break;
-            }
-
-        result = OBFS_ERROR;
-        if (strncasecmp(hostname, obfs_socket5->host, result) == 0) {
-            result = OBFS_OK;
-        }
-        free(hostname);
-        return result;
-    }
-
-    return OBFS_OK;
-}
-
-static int
-get_header(const char *header, const char *data, int data_len, char **value)
-{
-    int len, header_len;
-
-    header_len = strlen(header);
-
-    /* loop through headers stopping at first blank line */
-    while ((len = next_header(&data, &data_len)) != 0)
-        if (len > header_len && strncasecmp(header, data, header_len) == 0) {
-            /* Eat leading whitespace */
-            while (header_len < len && isblank((unsigned char)data[header_len]))
-                header_len++;
-
-            *value = malloc(len - header_len + 1);
-            if (*value == NULL)
-                return -4;
-
-            strncpy(*value, data + header_len, len - header_len);
-            (*value)[len - header_len] = '\0';
-
-            return len - header_len;
-        }
-
-    /* If there is no data left after reading all the headers then we do not
-     * have a complete HTTP request, there must be a blank line */
-    if (data_len == 0)
-        return -1;
-
-    return -2;
-}
-
-static int
-next_header(const char **data, int *len)
-{
-    int header_len;
-
-    /* perhaps we can optimize this to reuse the value of header_len, rather
-     * than scanning twice.
-     * Walk our data stream until the end of the header */
-    while (*len > 2 && (*data)[0] != '\r' && (*data)[1] != '\n') {
-        (*len)--;
-        (*data)++;
-    }
-
-    /* advanced past the <CR><LF> pair */
-    *data += 2;
-    *len  -= 2;
-
-    /* Find the length of the next header */
-    header_len = 0;
-    while (*len > header_len + 1
-           && (*data)[header_len] != '\r'
-           && (*data)[header_len + 1] != '\n')
-        header_len++;
-
-    return header_len;
 }
 
 
@@ -329,14 +300,14 @@ struct BSocksClient_auth_info BSocksClient_auth_none (void)
 
 
 static void
-disable_http(obfs_t *obfs)
+disable_socket5(obfs_t *obfs)
 {
     obfs->obfs_stage = -1;
     obfs->deobfs_stage = -1;
 }
 
 static int
-is_enable_http(obfs_t *obfs)
+is_enable_socket5(obfs_t *obfs)
 {
     return obfs->obfs_stage != -1 && obfs->deobfs_stage != -1;
 }

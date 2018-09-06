@@ -23,6 +23,7 @@
 #ifndef OBFS_SOCKET5_H
 #define OBFS_SOCKET5_H
 #define SOCKS_VERSION 0x05
+#define SOCKS_REP_SUCCEEDED 0x00
 #define SOCKS_METHOD_NO_AUTHENTICATION_REQUIRED 0x00
 
 #include "obfs.h"
@@ -36,6 +37,18 @@ struct socks_client_hello_method {
 struct socks_server_hello {
     uint8_t ver;
     uint8_t method;
+};
+struct socks_request_header {
+    uint8_t ver;
+    uint8_t cmd;
+    uint8_t rsv;
+    uint8_t atyp;
+};
+struct socks_reply_header {
+    uint8_t ver;
+    uint8_t rep;
+    uint8_t rsv;
+    uint8_t atyp;
 };
 struct BSocksClient_auth_info {
     int auth_type;
@@ -52,6 +65,11 @@ static uint8_t hton8 (uint8_t x)
 {
     return x;
 }
+static uint8_t ntoh8 (uint8_t x)
+{
+    return hton8(x);
+}
+
 extern obfs_para_t *obfs_socket5;
 
 #endif

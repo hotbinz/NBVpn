@@ -33,6 +33,8 @@ object Executable {
     const val SS_TUNNEL = "libss-tunnel.so"
     const val TUN2SOCKS = "libtun2socks.so"
     const val OVERTURE = "liboverture.so"
+    const val SSS_PROXY = "libsss-proxy.so"
+
 
     val EXECUTABLES = setOf(SS_LOCAL, SS_TUNNEL, REDSOCKS, TUN2SOCKS, OVERTURE)
 

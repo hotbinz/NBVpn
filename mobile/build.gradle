@@ -21,8 +21,8 @@ android {
         applicationId "com.github.nbvpn"
         minSdkVersion rootProject.minSdkVersion
         targetSdkVersion rootProject.sdkVersion
-        versionCode 4050800
-        versionName "4.5.9"
+        versionCode 4060100
+        versionName "4.6.1"
         testApplicationId "com.github.nbvpn.test"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         resConfigs "fa", "fr", "ja", "ko", "ru", "zh-rCN", "zh-rTW"

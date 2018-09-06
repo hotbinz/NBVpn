@@ -32,7 +32,6 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceDataStore
 import android.support.v7.widget.Toolbar
-import android.util.Log
 import android.view.MenuItem
 import com.github.nbvpn.App.Companion.app
 import com.github.nbvpn.database.Profile

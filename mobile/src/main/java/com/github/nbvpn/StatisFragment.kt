@@ -20,18 +20,34 @@
 
 package com.github.nbvpn
 
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.view.*
 import android.widget.TextView
 import com.futuremind.recyclerviewfastscroll.FastScroller
-import com.github.nbvpn.acl.CustomRulesFragment
+import com.github.nbvpn.utils.FormetFileSize
 import com.github.nbvpn.utils.HostRecordEntity
 import com.github.nbvpn.utils.childFragManager
+import java.text.SimpleDateFormat
+import android.support.v7.app.AlertDialog
 
-class StatisFragment : ToolbarFragment() {
+class StatisFragment : ToolbarFragment(), Toolbar.OnMenuItemClickListener {
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        val activity = requireActivity()
+        AlertDialog.Builder(activity)
+                .setTitle("确定要清空所有记录？")
+                .setPositiveButton(R.string.yes, { _, _ ->
+                    ToolbarFragment.Data.hostsRecordList.clear()
+                })
+                .setNegativeButton(R.string.no, null)
+                .create()
+                .show()
+        return true
+    }
 
     private val adapter by lazy { AclRulesAdapter() }
     private lateinit var list: RecyclerView
@@ -42,7 +58,8 @@ class StatisFragment : ToolbarFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         toolbar.setTitle(R.string.statis)
-
+        toolbar.inflateMenu(R.menu.statis_rules_menu)
+        toolbar.setOnMenuItemClickListener(this)
         list = view.findViewById(R.id.list)
         list.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
         list.itemAnimator = DefaultItemAnimator()
@@ -56,7 +73,7 @@ class StatisFragment : ToolbarFragment() {
             holder.bind(hosts[i])
         }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = AclRuleViewHolder(LayoutInflater
-                .from(parent.context).inflate(android.R.layout.simple_list_item_1, parent, false))
+                .from(parent.context).inflate(R.layout.layout_statis_item, parent, false))
         override fun getItemCount(): Int = hosts.size()
 
         fun add(hostRecordEntity: HostRecordEntity): Int {
@@ -79,6 +96,8 @@ class StatisFragment : ToolbarFragment() {
             View.OnClickListener, View.OnLongClickListener {
         lateinit var item: Any
         private val text = view.findViewById<TextView>(android.R.id.text1)
+        private val text2 = view.findViewById<TextView>(android.R.id.text2)
+        private val text3 = view.findViewById<TextView>(R.id.text3)
 
         init {
             view.setPaddingRelative(view.paddingStart, view.paddingTop,
@@ -91,7 +110,19 @@ class StatisFragment : ToolbarFragment() {
 
         fun bind(hostinfo: HostRecordEntity) {
             item = hostinfo
-            text.text = hostinfo.hostname
+            var hostAry:List<String> = hostinfo.hostname!!.split("/")
+            text.text = hostAry[1]
+            if (hostAry[0] == "bypass") {
+                text3.text = "直连"
+                text3.setBackgroundColor(Color.parseColor("#515151"))
+            }
+            else {
+                text3.text = "代理"
+                text3.setBackgroundColor(Color.parseColor("#1478b7"))
+            }
+
+            val df = SimpleDateFormat("HH:mm:ss")
+            text2.text =  "#" + df.format(hostinfo.datetime) + " " + " - " + FormetFileSize(hostAry[2].toLong())
         }
 
         override fun onClick(v: View?) {

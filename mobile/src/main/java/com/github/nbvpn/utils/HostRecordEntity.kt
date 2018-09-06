@@ -6,6 +6,6 @@ class HostRecordEntity(hostname:String, datetime: Date) : Comparable<HostRecordE
     var hostname:String? = hostname
     var datetime = datetime
     override fun compareTo(other: HostRecordEntity): Int {
-        return datetime.compareTo(other.datetime)
+        return other.datetime.compareTo(datetime)
     }
 }

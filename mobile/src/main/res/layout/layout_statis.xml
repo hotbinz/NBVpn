@@ -13,7 +13,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingBottom="32dp"
-            tools:listitem="@android:layout/simple_list_item_1"
+            tools:listitem="@layout/layout_statis_item"
             android:clipToPadding="false"/>
         <com.futuremind.recyclerviewfastscroll.FastScroller
             android:id="@+id/fastscroller"

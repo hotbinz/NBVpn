@@ -14,6 +14,7 @@ import com.github.nbvpn.App.Companion.app
 import com.github.shadowsocks.JniHelper
 import java.net.InetAddress
 import java.net.URLConnection
+import java.text.DecimalFormat
 
 private val fieldChildFragmentManager by lazy {
     val field = Fragment::class.java.getDeclaredField("mChildFragmentManager")
@@ -75,3 +76,27 @@ private class SortedListIterator<out T>(private val list: SortedList<T>) : Itera
     override fun next(): T = if (hasNext()) list[count++] else throw NoSuchElementException()
 }
 fun <T> SortedList<T>.asIterable(): Iterable<T> = SortedListIterable(this)
+/**
+ * 转换文件大小
+ *
+ * @param fileS
+ * @return
+ */
+fun FormetFileSize(fileS: Long): String {
+    val df = DecimalFormat("#")
+    var fileSizeString = ""
+    val wrongSize = "0B"
+    if (fileS == 0L) {
+        return wrongSize
+    }
+    if (fileS < 1024) {
+        fileSizeString = df.format(fileS.toDouble()) + "B"
+    } else if (fileS < 1048576) {
+        fileSizeString = df.format(fileS.toDouble() / 1024) + "KB"
+    } else if (fileS < 1073741824) {
+        fileSizeString = df.format(fileS.toDouble() / 1048576) + "MB"
+    } else {
+        fileSizeString = df.format(fileS.toDouble() / 1073741824) + "GB"
+    }
+    return fileSizeString
+}
